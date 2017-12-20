@@ -1,7 +1,3 @@
-# Skyshot Shooter 0.1.0
-# Simple game made in Python with Pygame. Uses a font from Google
-# and original graphics. Currently in alpha, and is not playable.
-
 import sys, pygame
 from pygame.locals import *
 pygame.init()
