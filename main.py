@@ -24,9 +24,13 @@ clock = pygame.time.Clock()
 # colors
 bg_color = 244, 244, 244
 dark = 20, 20, 20
+red = 238, 32, 77
+purple = 91, 37, 197
+purple_light = 152, 125, 198
 
 # images
 player = pygame.image.load("assets/ship.png")
+health = pygame.image.load("assets/health.png")
 enemy_w = pygame.image.load("assets/enemy1.png")
 enemy_t = pygame.image.load("assets/enemy2.png")
 bullet_p = pygame.image.load("assets/bullet1.png")
@@ -39,10 +43,11 @@ cloud_ac = 32
 s_size = width, height = 640, 480
 screen = pygame.display.set_mode(s_size)
 pygame.display.set_caption("Skyshot")
-pygame.display.set_icon(player)
+pygame.display.set_icon(pygame.transform.scale(player, (32, 48)))
 
 # font
 vt = pygame.font.Font("assets/font/VT323-Regular.ttf", 32)
+vt_l = pygame.font.Font("assets/font/VT323-Regular.ttf", 128)
 
 def game_over():
   screen.fill(bg_color)
@@ -58,9 +63,10 @@ def game_over():
       if event.type == pygame.KEYDOWN:
         if event.key == K_ESCAPE:
           sys.exit()
+    clock.tick(30)
 
 def opening():
-  title = pygame.image.load("assets/title.png")
+  title = vt_l.render("SKYSHOT", True, bg_color, dark)
   siz = title.get_size()[0]
   loc = ((640 / 2) - (siz / 2)), 40
   while True:
@@ -76,6 +82,7 @@ def opening():
     draw_bg()
     screen.blit(title, loc)
     pygame.display.flip()
+    clock.tick(30)
 
 def draw_bg():
     cloud["pos1"] += cloud_ac
@@ -167,6 +174,17 @@ while True:
     if p_bullets[i]["h"] < -32:
       del p_bullets[i]
     i += 1
+
+  i = 0
+  ammo = abs(len(p_bullets) - 4)
+  spot = 8
+  while i < ammo:
+    screen.blit(pygame.transform.scale(bullet_p, (8, 16)), (spot, 432))
+    spot += 16
+    i += 1
+
+  screen.blit(pygame.transform.scale(health, (24, 24)), (8, 452))
+  screen.blit(vt.render(str(play_s["health"]), True, purple), (36, 448))
 
   screen.blit(pygame.transform.scale(player, (32, 48)), r_location)
   pygame.display.flip()
