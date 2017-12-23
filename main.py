@@ -1,18 +1,26 @@
+#!/usr/bin/env python3
 import sys, pygame
 from pygame.locals import *
 pygame.init()
+
+# ideas:
+# use l and r bound to track boundaries
 
 # gameplay
 location = ( 640 / 2 ) - 16
 accel = 2
 acc_m = 8
 tick = 0
+bounds = [80, 560]
 ctls = { "l": K_LEFT, "r": K_RIGHT, "f": K_z, "s": K_x }
 keys = { "l": False, "r": False, "f": False, "s": False }
 keys_s = { "l": False, "r": False, "f": False, "s": False }
 play_s = { "health": 20, "damage": 2 }
-enemies = { "enemy1": { "health": 20, "damage": 4, "sprite": "assets/enemy1.png" },
-  "enemy2": { "health": 30, "damage": 2, "sprite": "assets/enemy2.png" } }
+enemies = {
+  "enemy1": { "health": 20, "damage": 4, "dir": "r", "acc": 8,
+    "sprite": "assets/enemy1.png" },
+  "enemy2": { "health": 30, "damage": 2, "dir": "l", "acc": 6,
+    "sprite": "assets/enemy2.png" } }
 p_bullets = []
 bullets = []
 clock = pygame.time.Clock()
@@ -34,6 +42,20 @@ bullet_e = pygame.image.load("assets/bullet2.png")
 land = { "img": pygame.image.load("assets/forest.png"), "pos1": 0, "pos2":-480 }
 cloud = { "img": pygame.image.load("assets/clouds.png"), "pos1": -480, "pos2": -1440 }
 cloud_ac = 32
+pos = 16
+for i in enemies:
+  enemies[i]["img"] = pygame.image.load(enemies[i]["sprite"])
+  enemies[i]["rect"] = enemies[i]["img"].get_rect()
+  size = enemies[i]["img"].get_size()
+  enemies[i]["rect"].x = 320 - size[0]
+  enemies[i]["rect"].y = pos
+  enemies[i]["rect"].w = size[0] * 8
+  enemies[i]["rect"].h = size[1] * 8
+  pos += 48
+del pos
+
+# sfx
+# music = pygame.mixer.music.load("")
 
 # screen
 s_size = width, height = 640, 480
@@ -144,17 +166,47 @@ while True:
   
   if keys_s["f"] == True:
     if not len(p_bullets) >= 4:
-      p_bullets.append({"h": 400, "w": location + 8})
+      p_bullets.append({"h": 400, "w": location + 8, "r": pygame.Rect((location + 8, 400), (8, 16))})
+  
+  enemies_new = enemies.copy()
+  for e in enemies:
+    if enemies[e]["health"] <= 0:
+      del enemies_new[e]
+  
+  enemies = enemies_new.copy()
+  del enemies_new
+  
+  for e in enemies:
+    if enemies[e]["dir"] == "l":
+      enemies[e]["rect"].x -= enemies[e]["acc"]
+    elif enemies[e]["dir"] == "r":
+      enemies[e]["rect"].x += enemies[e]["acc"]
+    
+    if enemies[e]["rect"].x > bounds[1]:
+      enemies[e]["rect"].x = bounds[1]
+      enemies[e]["dir"] = "l"
+    elif enemies[e]["rect"].x < bounds[0]:
+      enemies[e]["rect"].x = bounds[0]
+      enemies[e]["dir"] = "r"
+  
+  i = 0
+  while i < len(p_bullets):
+    for e in enemies:
+      if p_bullets[i]["r"].colliderect(enemies[e]["rect"]):
+        enemies[e]["health"] -= play_s["damage"]
+        del p_bullets[i]
+        break
+    i += 1
 
   if accel >= acc_m:
     accel = acc_m
   elif accel <= -acc_m:
     accel = -acc_m
 
-  if location > 600:
-    location = 600
-  elif location < 40:
-    location = 40
+  if location > bounds[1]:
+    location = bounds[1]
+  elif location < bounds[0]:
+    location = bounds[0]
   
   r_location = location, 400
   
@@ -166,11 +218,18 @@ while True:
   i = 0
   while i < len(p_bullets):
     p_bullets[i]["h"] -= 16
+    p_bullets[i]["r"].y -= 16
     screen.blit(pygame.transform.scale(bullet_p, (8, 16)), (p_bullets[i]["w"], p_bullets[i]["h"]))
     if p_bullets[i]["h"] < -32:
       del p_bullets[i]
     i += 1
-
+  
+  for e in enemies:
+    size = enemies[e]["img"].get_size()
+    screen.blit(pygame.transform.scale(enemies[e]["img"],
+    (size[0] * 8, size[1] * 8)),
+    (enemies[e]["rect"].x, enemies[e]["rect"].y))
+  
   i = 0
   ammo = abs(len(p_bullets) - 4)
   spot = 8
