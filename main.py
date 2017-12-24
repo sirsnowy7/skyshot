@@ -4,10 +4,11 @@ from pygame.locals import *
 pygame.init()
 
 # todo:
-# let enemies turn
-# enable damage boosting A.K.A. invicibility period
-# audio overall
-# fix flickering bullets
+#  let enemies turn
+#  enable damage boosting A.K.A. invicibility period
+#  audio overall
+#  fix flickering bullets
+#! add a win screen
 
 # gameplay
 location = ( 640 / 2 ) - 16
