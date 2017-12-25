@@ -9,7 +9,15 @@ pygame.init()
 #  fix flickering bullets
 
 clock = pygame.time.Clock()
-
+if "n" in sys.argv[1:]:
+  difficulty = "n"
+elif "h" in sys.argv[1:]:
+  difficulty = "h"
+elif "e" in sys.argv[1:]:
+  difficulty = "e"
+else:
+  difficulty = "m"
+  
 # sfx
 # music = pygame.mixer.music.load("")
 
@@ -79,15 +87,17 @@ def ending(start_time):
   txt = vt.render("You have beaten the enemy ships.", True, dark)
   loc = center(txt), 80
   screen.blit(txt, loc)
-  txt = vt.render("You are the saviour of mankind.", True, dark)
-  loc = center(txt), 120
-  screen.blit(txt, loc)
-  txt = vt.render("This isn't over, though...", True, dark)
-  loc = center(txt), 160
-  screen.blit(txt, loc)
-  txt = vt_l.render("End", True, dark)
-  loc = center(txt), 440 - txt.get_size()[1]
-  screen.blit(txt, loc)
+  if difficulty == "n":
+    txt = vt.render("You are the saviour of mankind.", True, dark)
+    loc = center(txt), 120
+    screen.blit(txt, loc)
+    txt = vt_l.render("End", True, dark)
+    loc = center(txt), 440 - txt.get_size()[1]
+    screen.blit(txt, loc)
+  else:
+    txt = vt.render("This isn't over, though...", True, dark)
+    loc = center(txt), 120
+    screen.blit(txt, loc)
   pygame.display.flip()
   time.sleep(2)
   while True:
@@ -148,13 +158,41 @@ def draw_bg():
 
 def main():
   # variables
-  enemies = {
-    "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
-      "bullets": [], "freq": 17,
-      "sprite": "assets/enemy1.png" },
-    "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "turn": 0,
-      "bullets": [], "freq": 31,
-      "sprite": "assets/enemy2.png" } }
+  if difficulty == "n": # in sys.argv[1:]:
+    enemies = {
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
+        "bullets": [], "freq": 17,
+        "sprite": "assets/enemy1.png" },
+      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "turn": 0,
+        "bullets": [], "freq": 31,
+        "sprite": "assets/enemy2.png" } ,
+      "enemy3": { "health": 30, "damage": 4, "dir": "l", "acc": 4, "turn": 0,
+        "bullets": [], "freq": 23,
+        "sprite": "assets/enemy3.png" } }
+  elif difficulty == "h": # in sys.argv[1:]:
+    enemies = {
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
+        "bullets": [], "freq": 17,
+        "sprite": "assets/enemy1.png" },
+      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "turn": 0,
+        "bullets": [], "freq": 31,
+        "sprite": "assets/enemy2.png" } }
+  elif difficulty == "e": # in sys.argv[1:]:
+    enemies = {
+      "enemy1": { "health": 10, "damage": 2, "dir": "r", "acc": 3, "turn": 400,
+        "bullets": [], "freq": 31,
+        "sprite": "assets/enemy1.png" },
+      "enemy2": { "health": 15, "damage": 3, "dir": "l", "acc": 2, "turn": 0,
+        "bullets": [], "freq": 55,
+        "sprite": "assets/enemy2.png" } }
+  else:
+    enemies = {
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
+        "bullets": [], "freq": 24,
+        "sprite": "assets/enemy1.png" },
+      "enemy2": { "health": 25, "damage": 4, "dir": "l", "acc": 2.5, "turn": 0,
+        "bullets": [], "freq": 43,
+        "sprite": "assets/enemy2.png" } }
   location = ( 640 / 2 ) - 16
   accel = 2
   acc_m = 8
