@@ -4,9 +4,7 @@ from pygame.locals import *
 pygame.init()
 
 # todo:
-#  let enemies turn
 #  audio overall
-#  fix flickering bullets
 
 clock = pygame.time.Clock()
 if "n" in sys.argv[1:]:
@@ -79,7 +77,9 @@ def ending(start_time):
   finish_time = time.mktime(time.gmtime()) - time.mktime(start_time)
   m, s = divmod(finish_time, 60)
   h, m = divmod(m, 60)
-  finish_time = "{}:{}".format(int(m), int(s))
+  if s < 10:
+    s = "0" + str(int(s))
+  finish_time = "{}:{}".format(int(m), str(s))
   screen.fill(bg_color)
   txt = vt.render("Congratulations! Finished in {}.".format(finish_time), True, dark)
   loc = center(txt), 40
@@ -158,41 +158,32 @@ def draw_bg():
 
 def main():
   # variables
-  if difficulty == "n": # in sys.argv[1:]:
+  if difficulty == "n":
     enemies = {
-      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
-        "bullets": [], "freq": 17,
-        "sprite": "assets/enemy1.png" },
-      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "turn": 0,
-        "bullets": [], "freq": 31,
-        "sprite": "assets/enemy2.png" } ,
-      "enemy3": { "health": 30, "damage": 4, "dir": "l", "acc": 4, "turn": 0,
-        "bullets": [], "freq": 23,
-        "sprite": "assets/enemy3.png" } }
-  elif difficulty == "h": # in sys.argv[1:]:
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "freq": 17,
+        "sprite": "assets/enemy1.png", "pos": 2 },                           
+      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "freq": 31,
+        "sprite": "assets/enemy2.png", "pos": 1 } ,                          
+      "enemy3": { "health": 30, "damage": 4, "dir": "l", "acc": 4, "freq": 23,
+        "sprite": "assets/enemy3.png", "pos": 0 } }
+  elif difficulty == "h":
     enemies = {
-      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
-        "bullets": [], "freq": 17,
-        "sprite": "assets/enemy1.png" },
-      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "turn": 0,
-        "bullets": [], "freq": 31,
-        "sprite": "assets/enemy2.png" } }
-  elif difficulty == "e": # in sys.argv[1:]:
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "freq": 17,
+        "sprite": "assets/enemy1.png", "pos": 1 },
+      "enemy2": { "health": 30, "damage": 4, "dir": "l", "acc": 3, "freq": 31,
+        "sprite": "assets/enemy2.png", "pos": 0 } }
+  elif difficulty == "e":
     enemies = {
-      "enemy1": { "health": 10, "damage": 2, "dir": "r", "acc": 3, "turn": 400,
-        "bullets": [], "freq": 31,
-        "sprite": "assets/enemy1.png" },
-      "enemy2": { "health": 15, "damage": 3, "dir": "l", "acc": 2, "turn": 0,
-        "bullets": [], "freq": 55,
-        "sprite": "assets/enemy2.png" } }
+      "enemy1": { "health": 10, "damage": 2, "dir": "r", "acc": 3, "freq": 31,
+        "sprite": "assets/enemy1.png", "pos": 1 },
+      "enemy2": { "health": 15, "damage": 3, "dir": "l", "acc": 2, "freq": 55,
+        "sprite": "assets/enemy2.png", "pos": 0 } }
   else:
     enemies = {
-      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "turn": 400,
-        "bullets": [], "freq": 24,
-        "sprite": "assets/enemy1.png" },
-      "enemy2": { "health": 25, "damage": 4, "dir": "l", "acc": 2.5, "turn": 0,
-        "bullets": [], "freq": 43,
-        "sprite": "assets/enemy2.png" } }
+      "enemy1": { "health": 20, "damage": 2, "dir": "r", "acc": 4, "freq": 24,
+        "sprite": "assets/enemy1.png", "pos": 1 },
+      "enemy2": { "health": 25, "damage": 4, "dir": "l", "acc": 2.5, "freq": 43,
+        "sprite": "assets/enemy2.png", "pos": 0 } }
   location = ( 640 / 2 ) - 16
   accel = 2
   acc_m = 8
@@ -204,17 +195,15 @@ def main():
   play_s = { "health": 20, "damage": 2, "spd": 2.5, "rect": pygame.Rect((320, 400),
     (player.get_size()[0] * 8, player.get_size()[1] * 8)) }
   p_bullets = []
-  pos = 16
+  bullets = []
   for i in enemies:
     enemies[i]["img"] = pygame.image.load(enemies[i]["sprite"]).convert_alpha()
     enemies[i]["rect"] = enemies[i]["img"].get_rect()
     size = enemies[i]["img"].get_size()
     enemies[i]["rect"].x = 320 - size[0]
-    enemies[i]["rect"].y = pos
+    enemies[i]["rect"].y = enemies[i]["pos"] * 40 + 8
     enemies[i]["rect"].w = size[0] * 8
     enemies[i]["rect"].h = size[1] * 8
-    pos += 48
-  del pos
   
   t = time.gmtime()
   
@@ -285,9 +274,11 @@ def main():
         enemies[e]["rect"].x = bounds[0]
         enemies[e]["dir"] = "r"
       
+      size = enemies[e]["img"].get_size()
       if tick % enemies[e]["freq"] == 0:
-        enemies[e]["bullets"].append(pygame.Rect((enemies[e]["rect"].x + (enemies[e]["rect"].w // 2), enemies[e]["rect"].y - 8),
-        (enemies[e]["img"].get_size()[0], enemies[e]["img"].get_size()[1])))
+        bullets.append({ "rect": pygame.Rect((enemies[e]["rect"].x + (size[0] / 2) - 8, enemies[e]["rect"].y + 8),
+        (8, 16)), "shooter": enemies[e] })
+      del size
     
     i = 0
     while i < len(p_bullets):
@@ -300,10 +291,10 @@ def main():
     
     for e in enemies:
       i = 0
-      while i < len(enemies[e]["bullets"]):
-        if play_s["rect"].colliderect(enemies[e]["bullets"][i]):
-          play_s["health"] -= enemies[e]["damage"]
-          del enemies[e]["bullets"][i]
+      while i < len(bullets):
+        if play_s["rect"].colliderect(bullets[i]["rect"]):
+          play_s["health"] -= bullets[i]["shooter"]["damage"]
+          del bullets[i]
           break
         i += 1
     
@@ -337,11 +328,11 @@ def main():
       screen.blit(pygame.transform.scale(enemies[e]["img"],
       (size[0] * 8, size[1] * 8)),
       (enemies[e]["rect"].x, enemies[e]["rect"].y))
-      while i < len(enemies[e]["bullets"]):
-        enemies[e]["bullets"][i].y += 8
-        screen.blit(pygame.transform.scale(bullet_e, (8, 16)), (enemies[e]["bullets"][i].x, enemies[e]["bullets"][i].y))
-        if enemies[e]["bullets"][i].y >= 640:
-          del enemies[e]["bullets"][i]
+      while i < len(bullets):
+        bullets[i]["rect"].y += 8
+        screen.blit(pygame.transform.scale(bullet_e, (8, 16)), (bullets[i]["rect"].x, bullets[i]["rect"].y))
+        if bullets[i]["rect"].y >= 656:
+          del bullets[i]
         i += 1
     
     i = 0
