@@ -4,7 +4,7 @@ from pygame.locals import *
 pygame.init()
 
 # todo:
-#  audio overall
+#  playtest!
 
 clock = pygame.time.Clock()
 if "n" in sys.argv[1:]:
@@ -15,19 +15,35 @@ elif "e" in sys.argv[1:]:
   difficulty = "e"
 else:
   difficulty = "m"
-  
-# sfx
-# music = pygame.mixer.music.load("")
 
 # font
-vt = pygame.font.Font("assets/font/VT323-Regular.ttf", 32)
+try:
+  vt = pygame.font.Font("assets/font/VT323-Regular.ttf", 32)
+except:
+  print("This game needs to be run from the project folder.")
+  sys.exit(1)
 vt_l = pygame.font.Font("assets/font/VT323-Regular.ttf", 128)
 
+# sfx
+death_enemy  = pygame.mixer.Sound("assets/sfx/death_enemy.wav")
+death_player = pygame.mixer.Sound("assets/sfx/death_player.wav")
+enemy_hit    = pygame.mixer.Sound("assets/sfx/enemy_hit.wav")
+enemy_shot   = pygame.mixer.Sound("assets/sfx/enemy_shot.wav")
+player_hit   = pygame.mixer.Sound("assets/sfx/player_hit.wav")
+player_shot  = pygame.mixer.Sound("assets/sfx/player_shot.wav")
+no_ammo      = pygame.mixer.Sound("assets/sfx/no_ammo.wav")
+pause_in     = pygame.mixer.Sound("assets/sfx/pause_in.wav")
+pause_out    = pygame.mixer.Sound("assets/sfx/pause_out.wav")
+player_shot.set_volume(0.5)
+enemy_shot.set_volume(0.6)
+
+# music
+
 # colors
-bg_color = 244, 244, 244
-dark = 20, 20, 20
-red = 238, 32, 77
-purple = 91, 37, 197
+bg_color     = 244, 244, 244
+dark         =  20,  20,  20
+red          = 238,  32,  77
+purple       =  91,  37, 197
 purple_light = 152, 125, 198
 
 # screen
@@ -79,6 +95,8 @@ def ending(start_time):
   h, m = divmod(m, 60)
   if s < 10:
     s = "0" + str(int(s))
+  else:
+    s = int(s)
   finish_time = "{}:{}".format(int(m), str(s))
   screen.fill(bg_color)
   txt = vt.render("Congratulations! Finished in {}.".format(finish_time), True, dark)
@@ -99,7 +117,7 @@ def ending(start_time):
     loc = center(txt), 120
     screen.blit(txt, loc)
   pygame.display.flip()
-  time.sleep(2)
+  time.sleep(5)
   while True:
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -189,9 +207,9 @@ def main():
   acc_m = 8
   tick = 3
   bounds = [80, 560]
-  ctls = { "l": K_LEFT, "r": K_RIGHT, "f": K_z, "s": K_x }
-  keys = { "l": False, "r": False, "f": False, "s": False }
-  keys_s = { "l": False, "r": False, "f": False, "s": False }
+  ctls = { "l": K_LEFT, "r": K_RIGHT, "f": K_z, "s": K_x, "p": K_p }
+  keys = { "l": False, "r": False, "f": False, "s": False, "p": False }
+  keys_s = { "l": False, "r": False, "f": False, "s": False, "p": False }
   play_s = { "health": 20, "damage": 2, "spd": 2.5, "rect": pygame.Rect((320, 400),
     (player.get_size()[0] * 8, player.get_size()[1] * 8)) }
   p_bullets = []
@@ -206,6 +224,12 @@ def main():
     enemies[i]["rect"].h = size[1] * 8
   
   t = time.gmtime()
+  
+  music = pygame.mixer.music
+  music.load("assets/music/dark_sanctum_visager.mp3")
+  music.set_volume(0.4)
+  
+  music.play(-1)
   
   while True:
     for key in keys_s:
@@ -227,14 +251,34 @@ def main():
           if event.key == ctls[ctl]:
             keys[ctl] = True
             keys_s[ctl] = True
-  
+    
+    if keys_s["p"] == True:
+      pause_in.play()
+      screen.blit(vt.render("Paused", True, bg_color, dark), (16, 16))
+      pygame.display.flip()
+      paused = True
+      music.pause()
+      while paused:
+        for event in pygame.event.get():
+          if event.type == pygame.KEYDOWN:
+            if event.key == K_ESCAPE:
+              sys.exit()
+            pause_out.play()
+            paused = False
+          if event.type == pygame.QUIT:
+            sys.exit()
+        clock.tick(60)
+      music.unpause()
+    
     if play_s["health"] <= 0:
+      death_player.play()
+      music.stop()
       game_over()
       break
     
     if len(enemies) == 0:
+      music.stop()
       ending(t)
-      time.sleep(3)
       break
     
     if (keys["l"] or keys["r"]) == True:
@@ -251,11 +295,15 @@ def main():
     
     if keys_s["f"] == True:
       if not len(p_bullets) >= 3:
+        player_shot.play()
         p_bullets.append(pygame.Rect((location + 8, 400), (8, 16)))
+      else:
+        no_ammo.play()
     
     enemies_new = enemies.copy()
     for e in enemies:
       if enemies[e]["health"] <= 0:
+        death_enemy.play()
         del enemies_new[e]
       
     enemies = enemies_new.copy()
@@ -276,6 +324,7 @@ def main():
       
       size = enemies[e]["img"].get_size()
       if tick % enemies[e]["freq"] == 0:
+        enemy_shot.play()
         bullets.append({ "rect": pygame.Rect((enemies[e]["rect"].x + (size[0] / 2) - 8, enemies[e]["rect"].y + 8),
         (8, 16)), "shooter": enemies[e] })
       del size
@@ -284,6 +333,7 @@ def main():
     while i < len(p_bullets):
       for e in enemies:
         if p_bullets[i].colliderect(enemies[e]["rect"]):
+          enemy_hit.play()
           enemies[e]["health"] -= play_s["damage"]
           del p_bullets[i]
           break
@@ -293,6 +343,7 @@ def main():
       i = 0
       while i < len(bullets):
         if play_s["rect"].colliderect(bullets[i]["rect"]):
+          player_hit.play()
           play_s["health"] -= bullets[i]["shooter"]["damage"]
           del bullets[i]
           break
