@@ -37,14 +37,11 @@ pause_out    = pygame.mixer.Sound("assets/sfx/pause_out.wav")
 player_shot.set_volume(0.5)
 enemy_shot.set_volume(0.6)
 
-# music
-
 # colors
 bg_color     = 244, 244, 244
 dark         =  20,  20,  20
-red          = 238,  32,  77
 purple       =  91,  37, 197
-purple_light = 152, 125, 198
+grey         =  70,  70,  70
 
 # screen
 s_size = width, height = 640, 480
@@ -55,6 +52,7 @@ pygame.display.set_icon(pygame.transform.scale(player, (32, 48)))
 
 # images
 health = pygame.image.load("assets/health.png").convert_alpha()
+en_health = pygame.image.load("assets/en_health.png").convert_alpha()
 enemy_w = pygame.image.load("assets/enemy1.png").convert_alpha()
 enemy_t = pygame.image.load("assets/enemy2.png").convert_alpha()
 bullet_p = pygame.image.load("assets/bullet1.png").convert_alpha()
@@ -393,6 +391,10 @@ def main():
       screen.blit(pygame.transform.scale(bullet_p, (8, 16)), (spot, 432))
       spot += 16
       i += 1
+    
+    for e in enemies:
+      screen.blit(pygame.transform.scale(en_health, (24, 24)), (8, enemies[e]["pos"] * 40 + 8))
+      screen.blit(vt.render(str(enemies[e]["health"]), True, grey), (36, enemies[e]["pos"] * 40 + 8))
     
     screen.blit(pygame.transform.scale(health, (24, 24)), (8, 452))
     screen.blit(vt.render(str(play_s["health"]), True, purple), (36, 448))
