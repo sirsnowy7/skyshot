@@ -3,9 +3,6 @@ import sys, time, pygame
 from pygame.locals import *
 pygame.init()
 
-# todo:
-#  playtest!
-
 clock = pygame.time.Clock()
 if "n" in sys.argv[1:]:
   difficulty = "n"
