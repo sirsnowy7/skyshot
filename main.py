@@ -131,6 +131,7 @@ def opening():
   txt = vt.render("Press any key to play", True, # bg_color, 
                                                 dark)
   loc2 = center(txt), 440 - txt.get_size()[1]
+  global difficulty
   while True:
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -138,6 +139,14 @@ def opening():
       if event.type == pygame.KEYDOWN:
         if event.key == K_ESCAPE:
           sys.exit()
+        elif event.key == K_1:
+          difficulty = "e"
+        elif event.key == K_2:
+          difficulty = "m"
+        elif event.key == K_3:
+          difficulty = "h"
+        elif event.key == K_4:
+          difficulty = "n"
         else:
           main()
     screen.fill(bg_color)
